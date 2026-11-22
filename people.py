@@ -57,6 +57,13 @@ class Person:
     def __lt__(self, other):
         return self.fio < other.fio
 
+    def __eq__(self, other):
+        if not isinstance(other, Person):
+            return False
+        return self.mail == other.mail
+
+    def __hash__(self):
+        return hash(self.mail)
 
 class Student(Person):
     def __init__(self, fio_raw, mail_raw, phone_raw, group_raw):

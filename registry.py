@@ -20,6 +20,9 @@ class Registry:
                         continue
                     try:
                         person = parse_line(line)
+                        if person in self.accept_anket:
+                            raise AnketaError(f"дубликат почты: {person.mail}")
+
                         self.add(person)
                     except AnketaError as reason:
                         self.decline_anket.append((line_num, str(reason), line))
