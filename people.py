@@ -17,6 +17,8 @@ class Person:
     @staticmethod
     def check_mail(input_mail):
         mail = input_mail.strip().lower()
+        if " " in mail:
+            raise AnketaError(f"почта неверная: {input_mail.strip()}")
         if mail.count("@") != 1:
             raise AnketaError(f"почта неверная: {input_mail.strip()}")
         name_part, domain = mail.split("@")
@@ -55,7 +57,7 @@ class Person:
         return f"{self.fio} ({self.role()}, {self.extra()})"
 
     def __lt__(self, other):
-        return self.fio < other.fio
+        return self.fio.lower().replace("ё", "е") < other.fio.lower().replace("ё", "е")
 
 
 class Student(Person):
