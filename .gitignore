@@ -4,3 +4,5 @@ __pycache__/
 ok.txt
 errors.txt
 razminka/
+server.py
+otchet.json
