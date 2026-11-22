@@ -20,6 +20,7 @@ def save_results(accept_anket, decline_anket):
 def main():
     accept_anket = []
     decline_anket = []
+    seen_emails = set()
     total_lines = 0
     try:
         with open(input_file, "r", encoding="utf-8") as file:
@@ -31,7 +32,10 @@ def main():
                 anket, error_reason = parse_line(line)
                 if error_reason:
                     decline_anket.append((line_num, error_reason, line))
+                elif anket[1] in seen_emails:
+                    decline_anket.append((line_num, f"дубликат почты: {anket}", line))
                 else:
+                    seen_emails.add(anket)
                     accept_anket.append(anket)
     except FileNotFoundError:
         print(f"Ошибка: файл {input_file} не найден!")
