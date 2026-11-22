@@ -1,47 +1,43 @@
-from validators import parse_line
-from report import print_table, print_errors, print_summary
-
-input_file = "anketa.txt"
-accept_file = "ok.txt"
-defect_file = "errors.txt"
-
-def save_results(accept_anket, decline_anket):
-    with open(accept_file, "w", encoding="utf-8") as ok_f:
-        for fio, mail, phone, group in accept_anket:
-            ok_f.write(f"{fio};{mail};{phone};{group}\n")
-
-    with open(defect_file, "w", encoding="utf-8") as err_f:
-        for line_num, reason, raw_text in decline_anket:
-            err_f.write(f"строка {line_num}: {reason} | {raw_text}\n")
-
-    print(f"\nСохранено: {accept_file} и {defect_file}")
-
+from registry import Registry
 
 def main():
-    accept_anket = []
-    decline_anket = []
-    total_lines = 0
-    try:
-        with open(input_file, "r", encoding="utf-8") as file:
-            for line_num, raw_line in enumerate(file, 1):
-                total_lines = line_num
-                line = raw_line.strip()
-                if not line: continue
+    input_file = "anketa.txt"
+    accept_file = "ok.txt"
+    defect_file = "errors.txt"
 
-                anket, error_reason = parse_line(line)
-                if error_reason:
-                    decline_anket.append((line_num, error_reason, line))
-                else:
-                    accept_anket.append(anket)
-    except FileNotFoundError:
+    reg = Registry()
+    if not reg.load(input_file):
         print(f"Ошибка: файл {input_file} не найден!")
         return
 
-    accept_anket.sort(key=lambda a: a[0])
-    print_table(accept_anket)
-    print_errors(decline_anket)
-    print_summary(total_lines, accept_anket, decline_anket)
-    save_results(accept_anket, decline_anket)
+    print(f"{'№':<4}{'ФИО':<28}{'Роль':<15}{'Группа/кафедра':<16}{'Телефон':<18}")
+    print("-" * 81)
+
+    for idx, p in enumerate(sorted(reg.accept_anket), start=1):
+        short_fio = p.fio[:26] + "…" if len(p.fio) > 27 else p.fio
+        print(f"{idx:<4}{short_fio:<28}{p.role():<15}{p.extra():<16}{p.masked_phone():<18}")
+
+    print("-" * 81)
+
+    print(f"\nОтклонено строк: {len(reg.decline_anket)}")
+    for line_num, reason, raw_text in reg.decline_anket:
+        print(f"  строка {line_num}: {reason}")
+        print(f"      {raw_text}")
+
+    print(f"\nВсего строк в файле: {reg.total_lines}")
+    print(f"Принято: {len(reg)} | Отклонено: {len(reg.decline_anket)}")
+
+    print("\nПо ролям:")
+    for role, count in sorted(reg.stats_by_role().items()):
+        print(f"  {role:<15}{count}")
+
+    print("\nПо группам:")
+    for group, count in sorted(reg.stats_by_group().items()):
+        print(f"  {group:<15}{count}")
+
+    reg.save_ok(accept_file)
+    reg.save_errors(defect_file)
+    print(f"\nСохранено: {accept_file} и {defect_file}")
 
 if __name__ == "__main__":
     main()
